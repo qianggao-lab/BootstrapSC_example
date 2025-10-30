@@ -80,11 +80,11 @@ and the plot
 
 <img src="Spinful_Flatband_SC/bootstrapSC_spinful_with_ED.png" alt="Rigorous bounds" width="40%">
 
-From the results, we see clearly that the bootstrap results saturate the upper bounds $` m_{pair}^{-1}\nu(1-\nu)`$ where $`m_{pair}`$ is the two particle pair mass obtained from the ED.
+From the results, we see clearly that the bootstrap results saturate the upper bounds $` m_{pair}^{-1}\nu(1-\nu)`$ where $`m_{pair}`$ is the two-particle pair mass obtained from the ED.
 To further confirm the exactness of the bootstrap lower bound, we included a minimal ED calculation in the example code (works only at the zero momentum sector).
 
 ### B. Spinless case (chiral SC)
-For spinless models presented in preprint [^han2025], the implementations are very similar (`main_example_code_spinless.m`). However, due to the singularity in the flatband, we instead consider an even by even grid
+For spinless models presented in preprint [^han2025], the implementations are very similar (`main_example_code_spinless.m`). However, due to the singularity in the flatband, we instead consider an even-by-even grid
 ```matlab
 % System: Nx by Ny k-grid with an inverse symmetric diamond shape. Nx=Ny and
 % both are even. 
