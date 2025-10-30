@@ -1,6 +1,5 @@
 %{
 Copyright (c) 2025 Qiang Gao
-SPDX-License-Identifier: MIT
 Author: Qiang Gao <gq201277@gmail.com>
 Description: Bootstrap the stiffness of a flatband superconductor
 %}
