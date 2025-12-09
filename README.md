@@ -1,9 +1,9 @@
 # BootstrapSC
-This repository contains the <u>minimal example codes</u> for the project: ***bootstrapping the flatband superconductors***. This project belongs to a large ongoing project: ***(Fermionic) Quantum Many-body Bootstrap***, which is currently under development. 
+This repository contains the <u>minimal example codes</u> for the project: ***bootstrapping the flatband superconductors***. This project is part of a large ongoing project: ***(Fermionic) Quantum Many-body Bootstrap***, which is currently under development. 
 In this small repository, you will be able to use the codes to reproduce part of the results presented in two recent preprints: bootstrapping spinful flatband superconductors [^gao2025] and bootstrapping spinless chiral flatband superconductors [^han2025]
 
 ## Introduction
-Quantum many-body problems are notoriously hard because the number of degrees of freedom grows exponentially with system size. Solving such problems therefore, calls for techniques that can circumvent the resulting exponential complexity, motivating major advances in both theory and numerics, including Hartree–Fock (mean-field), quantum Monte Carlo, and the density-matrix renormalization group (DMRG). However, these methods have intrinsic limitations, often relying on weak correlations or low entanglement. This raises a natural question: How can we make *reliable* predictions in quantum many-body systems where brute-force simulation is impossible and uncontrolled approximations abound? This project seeks to address this by developing the *quantum many-body bootstrap* (QMB): a hierarchy of convex relaxations that enforce first principles—unitarity, causality/locality, gauge invariance, positivity, and sum rules—to yield *rigorous, systematically improvable bounds* on physical observables.
+Quantum many-body problems are notoriously hard because the number of degrees of freedom grows exponentially with system size. Solving such problems, therefore, calls for techniques that can circumvent the resulting exponential complexity, motivating major advances in both theory and numerics, including Hartree–Fock (mean-field), quantum Monte Carlo, and the density-matrix renormalization group (DMRG). However, these methods have intrinsic limitations, often relying on weak correlations or low entanglement. This raises a natural question: How can we make *reliable* predictions in quantum many-body systems where brute-force simulation is impossible and uncontrolled approximations abound? This project seeks to address this by developing the *quantum many-body bootstrap* (QMB): a hierarchy of convex relaxations that enforce first principles—unitarity, causality/locality, gauge invariance, positivity, and sum rules—to yield *rigorous, systematically improvable bounds* on physical observables.
 
 QMB reframes strongly interacting quantum systems as *convex optimization over observables* rather than a search over exponentially large wavefunctions. Instead of parameterizing $|\psi\rangle$, one works with low-order correlation data—e.g., the static structure factor $S(\mathbf{q})$ or $p$-particle reduced density matrices ($p$-RDMs). These objects must satisfy general physical principles that are independent of microscopic details: matrix-positivity of moment and RDM matrices; locality and short-distance constraints; and symmetries such as U(1), translation, and rotation. Upon choosing a proper physical quantity as the optimization variable, these constraints define a convex feasible set of such variables.
 
@@ -12,7 +12,7 @@ Minimizing the energy (or other figures of merit) over this feasible set yields 
 ## Bootstrapping the superfluid stiffness in flatband superconductors
 In the recent preprint [^gao2025], we showed that for flat-band superconductors, there could be *provable lower bounds* on the zero-temperature superfluid stiffness $D_s$ in frustration-free interacting models via the RDM bootstrap; the bounds scale with interaction strength and band quantum geometry and numerically match variational upper bounds, suggesting the exactness of the results obtained. Later, in a follow-up work [^han2025], we used QMB to certify nonzero $D_s$ extrapolated to the thermodynamic limit and identified two nearly degenerate, particle–hole conjugate pairing channels with distinct Majorana Chern numbers, which, combined with variational approaches, predict two tunable superconducting domes controlled by displacement field and carrier density and tying band geometry to stiffness and topology.
 
-Now, we are going to disclose the two sets of minimal example codes for reproducing part of the essential results presented in those two works. The purpose of this repository is primarily to show how the QMB works, which however is not documented. A fully documented version will be released separately.
+Now, we are going to disclose the two sets of minimal example codes for reproducing part of the essential results presented in those two works. The purpose of this repository is primarily to show how the QMB works, which, however, is not documented. A fully documented version will be released separately.
 
 ## Coding Instructions
 ### Prerequisites
@@ -30,7 +30,7 @@ The Special-functions package is only needed when you want to reproduce the data
 4) Install the SpecFunPhys Toolbox and add it to the MATLAB path.
 5) Add this repository to the MATLAB path.
 
-Detailed installation instructions can be found on the associated webpages. Or you can use any AI chatbox (ChatGPT, DeepSeek, et.) to help you with the installation.
+Detailed installation instructions can be found on the associated webpages. Or you can use any AI chatbot (ChatGPT, DeepSeek, etc.) to help you with the installation.
 
 Commands for adding the paths (inside MATLAB):
 ```matlab
@@ -54,7 +54,7 @@ Ny = 5;
 % superconducting ground state.
 N = 6;
 ```
-which is a $3\times 5$ $k$-grid (30 orbitals including spins) with 6 electrons occupied. The flatband model used here is the *Model I* defined in preprint [^gao2025], which is a topological flatband model. Notice that the provided codes work only for systems with odd by odd grids and even particle occupations.
+which is a $3\times 5$ $k$-grid (30 orbitals including spins) with 6 electrons occupied. The flatband model used here is the *Model I* defined in preprint [^gao2025], which is a topological flatband model. Notice that the provided codes work only for systems with odd-by-odd grids and even particle occupations.
 
 Simply run the code (inside MATLAB)
 ```matlab
