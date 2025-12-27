@@ -17,10 +17,10 @@ A = [0.01,0]; % this should be sufficiently small.
 % Let us first compare the bootstrap result for one filling with ED
 % Bootstrap
 [Stiffness_boot,runtime] = bootstrapSC(Nx, Ny, N, A);
-fprintf('The stiffness for Nx=%d, Ny=%d, and N=%d from bootstrap is %.12f, with runtime %.4fs\n',Nx,Ny,N,Stiffness_boot,runtime)
+fprintf('The stiffness for Nx=%d, Ny=%d, and N=%d from bootstrap is %.12f, with Elapsed time %.4fs\n',Nx,Ny,N,Stiffness_boot,runtime)
 % ED
 [stiffness_ED,runtime] = ED_gamma(Nx,Ny,N,A);
-fprintf('The stiffness for Nx=%d, Ny=%d, and N=%d from ED is %.12f, with runtime %.4fs\n',Nx,Ny,N,stiffness_ED,runtime)
+fprintf('The stiffness for Nx=%d, Ny=%d, and N=%d from ED is %.12f, with Elapsed time %.4fs\n',Nx,Ny,N,stiffness_ED,runtime)
 
 
 % Filling dependence
@@ -34,7 +34,7 @@ for i = 1:length(N_list)
     [stiffness_boot,run_time] = bootstrapSC(Nx, Ny, N_list(i), A);
     stiffness_boot_list(i) = stiffness_boot;
     runtime_boot_list(i) = run_time;
-    fprintf('Runtime: %.4fs\n',run_time)
+    fprintf('Elapsed time: %.4fs\n',run_time)
 end
 
 num_ED = 4;
@@ -45,7 +45,7 @@ for i = 1:num_ED
     [stiffness_ED,run_time] = ED_gamma(Nx, Ny, N_list(i), A);
     stiffness_ED_list(i) = stiffness_ED;
     runtime_ED_list(i) = run_time;
-    fprintf('Runtime: %.4fs\n',run_time)
+    fprintf('Elapsed time: %.4fs\n',run_time)
 end
 
 % Get the 2-particle pair mass from ED
