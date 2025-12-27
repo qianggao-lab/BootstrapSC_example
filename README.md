@@ -62,19 +62,19 @@ Simply run the code (inside MATLAB)
 ```
 you will see the output:
 ```
-The stiffness for Nx=3, Ny=5, and N=6 from bootstrap is 0.014456163198, with runtime 14.6910s
-The stiffness for Nx=3, Ny=5, and N=6 from ED is 0.014456564315, with runtime 30.9391s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=2 	Runtime: 9.2486s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=4 	Runtime: 13.0479s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=6 	Runtime: 12.9743s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=8 	Runtime: 12.9818s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=10 	Runtime: 13.0428s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=12 	Runtime: 13.6438s
-Bootstrapping stiffness for Nx=3, Ny=5, and N=14 	Runtime: 14.0747s
-ED stiffness for Nx=3, Ny=5, and N=2 	Runtime: 0.0154s
-ED stiffness for Nx=3, Ny=5, and N=4 	Runtime: 0.7906s
-ED stiffness for Nx=3, Ny=5, and N=6 	Runtime: 30.7173s
-ED stiffness for Nx=3, Ny=5, and N=8 	Runtime: 448.1879s
+The stiffness for Nx=3, Ny=5, and N=6 from bootstrap is 0.014456163198, with Elapsed time 14.6910s
+The stiffness for Nx=3, Ny=5, and N=6 from ED is 0.014456564315, with Elapsed time 30.9391s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=2 	Elapsed time: 9.2486s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=4 	Elapsed time: 13.0479s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=6 	Elapsed time: 12.9743s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=8 	Elapsed time: 12.9818s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=10 	Elapsed time: 13.0428s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=12 	Elapsed time: 13.6438s
+Bootstrapping stiffness for Nx=3, Ny=5, and N=14 	Elapsed time: 14.0747s
+ED stiffness for Nx=3, Ny=5, and N=2 	Elapsed time: 0.0154s
+ED stiffness for Nx=3, Ny=5, and N=4 	Elapsed time: 0.7906s
+ED stiffness for Nx=3, Ny=5, and N=6 	Elapsed time: 30.7173s
+ED stiffness for Nx=3, Ny=5, and N=8 	Elapsed time: 448.1879s
 ```
 and the plot
 
