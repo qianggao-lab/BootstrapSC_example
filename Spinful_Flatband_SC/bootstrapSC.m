@@ -1,5 +1,5 @@
 %{
-Copyright (c) 2025 Qiang Gao
+Copyright (c) 2026 Qiang Gao
 Author: Qiang Gao <gq201277@gmail.com>
 Description: Bootstrap the stiffness of a flatband superconductor
 %}
@@ -23,8 +23,10 @@ k0 = k0_ind*B_mat;
 
 Nk = length(k0_ind);
 
+% Building up the D, Q, G, and T2 constraints
 [M_G2D,M_rho,DkkBZ,D2_mask_total,D2_mask,M_k_Qmk,M_T2_to_D_selected,M_T2_to_rho_selected,Extra_part_T2_selected]=build_cons(k0_ind,N);
 
+% Constructing the flat-band superconducting Hamiltonian
 [F_Q_kkp_ssp_A,F_k_sz_A] = H_TFB(Nk,A,k0,DkkBZ);
 
 num_Sz_T2 = 10;
@@ -121,6 +123,8 @@ Stiffness_boot = real(Stiffness_boot);
 end
 
 function checker(Nx,Ny,N,A)
+% For this example code to work, we have to make sure the input parameters
+% are valid.
 if ~(isfinite(Nx) && (Nx == fix(Nx))) || ~(isfinite(Ny) && (Ny == fix(Ny)))  || Nx<=0 || Ny <=0
     error('Invalid inputs: Nx and Ny must be positive integers')
 elseif mod(Nx,2)~=1 || mod(Ny,2)~=1 
@@ -137,7 +141,7 @@ end
 end
 
 function [F_Q_kkp_ssp_A,F_k_sz_A] = H_TFB(Nk,A,k0,DkkBZ)
-
+% Construct the superconducting model with topological flat-bands, i.e., the Model I.
 D_AB_k = zeros(Nk,4,2,2);
 
 D_AB_k(:,:,:,1) = ones(Nk,4,2);
@@ -153,6 +157,7 @@ for q = 1:Nk
     end
 end
 
+% Flat gauge insertion
 H_k_single_pA = zeros(2,2,Nk);
 H_k_single_mA = zeros(2,2,Nk);
 t1 = 1;
@@ -214,33 +219,40 @@ U_k_alpha_flat_spin_down = conj(flip(U_k_alpha_flat_mA,2));
 
 U_k_alpha_flat_spin = cat(3,U_k_alpha_flat_spin_up,U_k_alpha_flat_spin_down);
 
-num_Sz_F = 4;
-Sz_F_map = [1,1;2,2;1,2;2,1]; 
+% The Hamiltonian has a form of density-density interaction: 
+% H = \sum_{k,sz,kp,szp,Q}F_{k,kp,Q,sz,szp}c^d_{k,sz} c_{Q-k,sz} c^d_{Q-kp,szp} c_{kp,szp}
+
+num_Sz_F = 4; % 4 different spin configurations: uuuu, dddd, uudd, and dduu (u for up and d for down)
+Sz_F_map = [1,1;2,2;1,2;2,1]; % 1 for spin up and 2 for spin down. This is slightly different 
+% from the convention used for constructing the constraint matrix.
 k_index_ordered_F = zeros(Nk^3*num_Sz_F,4);
 
+% make a flattened index for different momentum-spin configurations
+% {k,kp,Q,sz,szp}. Sz combines (sz,szp).
 count = 0;
 for Sz = 1:num_Sz_F
     for Qi = 1:Nk
         for kp = 1:Nk
             for k = 1:Nk
                 count = count + 1;
-                k_index_ordered_F(count,:) = [k,kp,Qi,Sz+2];
+                k_index_ordered_F(count,:) = [k,kp,Qi,Sz];
             end
         end
     end
 end
 
 
-F_Q_kkp_ssp_A = zeros(length(k_index_ordered_F),1);
-F_k_sz_A = zeros(Nk,2);
+F_Q_kkp_ssp_A = zeros(length(k_index_ordered_F),1); % F_Q_kkp_ssp_A is the vectorized F_{k,kp,Q,sz,szp}
+F_k_sz_A = zeros(Nk,2); % F_k_sz_A is the piece after contracting c_{Q-k,sz} with c^d_{Q-kp,szp} in the Hamiltonian
 
 for i = 1:length(F_Q_kkp_ssp_A)
+    % recover the momentum-spin configuration from the flattened index
     k1 = k_index_ordered_F(i,1);
     k1p = k_index_ordered_F(i,2);
     Qi = k_index_ordered_F(i,3);
     Sz = k_index_ordered_F(i,4);
-    sz = Sz_F_map(Sz-2,1);
-    szp = Sz_F_map(Sz-2,2);
+    sz = Sz_F_map(Sz,1);
+    szp = Sz_F_map(Sz,2);
 
     xi_sz = (-1)^(sz-1);
     xi_szp = (-1)^(szp-1);
@@ -293,21 +305,25 @@ end
 end
 
 function [M_G2D,M_d_dc_c,DkkBZ,D2_mask_total,D2_mask_SU2_total,M_k_Qmk,M_T2_to_D_selected,M_T2_to_rho_selected,Extra_part_T2_selected]=build_cons(k0_ind,N)
+% Construct the main constraints
 Nk = length(k0_ind);
+% DQG conditions
 [M_G2D,M_d_dc_c,SkkBZ,DkkBZ,D2_mask_total,D2_mask_SU2_total,M_k_Qmk] = construct_DQG(k0_ind,N);
+% T2 condition
 [M_T2_to_D_selected,M_T2_to_rho_selected,Extra_part_T2_selected] = construct_T2(Nk,SkkBZ,DkkBZ);
 end
 
 function [M_g2d,M_d2rho,SkkBZ,DkkBZ,D2_mask_total,D2_mask_SU2_total,M_k_Qmk] = construct_DQG(k0_ind,N)
-
+% Constructing the DQG conditions
 [SkkBZ,DkkBZ,D2_mask_total,D2_mask_SU2_total,M_k_Qmk]=lattice_mat(k0_ind);
 Nk = length(k0_ind);
-M_g2d = G2D(Nk,SkkBZ,DkkBZ);
-M_d2rho = D2rho(Nk,N,DkkBZ);
+M_g2d = G2D(Nk,SkkBZ,DkkBZ); % constructing a supermap that maps D matrix to G matrix
+M_d2rho = D2rho(Nk,N,DkkBZ); % constructing a supermap that maps D matrix to 1RDM, namely rho_ij (=<c^d_i c_j>)
 end
 
 function [index,index_finder] = D_indexing(Nk)
-num_Sz = 3;
+% Make a flattened index for the D matrix (vectorizing D): <c^d c^d c c>
+num_Sz = 3; % 3 different spin configurations: uuuu, dddd, and uddu (u for up and d for down)
 k_index_ordered = zeros(Nk^3*num_Sz,4);
 index_finder = zeros(Nk,Nk,Nk,num_Sz);
 
@@ -327,7 +343,8 @@ index = k_index_ordered;
 end
 
 function [index_g,index_finder_g] = G_indexing(Nk)
-num_Sz = 6;
+% Make a flattened index for the G matrix (vectorizing G): <c^d c c^d c>
+num_Sz = 6; % 6 different spin configurations: uddu, duud, uuuu, dddd, uudd, and dduu (u for up and d for down)
 k_index_ordered = zeros(Nk^3*num_Sz,4);
 index_finder = zeros(Nk,Nk,Nk,num_Sz);
 
@@ -352,8 +369,9 @@ end
 end
 
 function [Skk,Dkk,D2_mask_total,D2_mask_SU2_total,M_k_Qmk]=lattice_mat(k0_ind)
+% Construct the lattice
 Nk = length(k0_ind);
-Skk = zeros(Nk,Nk);
+Skk = zeros(Nk,Nk); % calculate the index for the BZ part of k1+k2
 for i = 1:Nk
     for j = 1:Nk
         temp1 = mod(k0_ind(i,1)+k0_ind(j,1),1);
@@ -373,7 +391,7 @@ for i = 1:Nk
 end
 Skk = round(Skk);
 
-Dkk = zeros(Nk,Nk);
+Dkk = zeros(Nk,Nk); % calculate the index for the BZ part of k1-k2
 for i = 1:Nk
     for j = 1:Nk
         temp1 = mod(k0_ind(i,1)-k0_ind(j,1),1);
@@ -417,104 +435,111 @@ end
 end
 
 function rho_k_sz = D2rho(Nk,N,DkkBZ)
-    [index_ddcc,index_finder_ddcc] = D_indexing(Nk);
-    dim_ddcc = length(index_ddcc);
+% Construct the supermap from the D matrix to rho by taking the partial
+% trace
+[index_ddcc,index_finder_ddcc] = D_indexing(Nk);
+dim_ddcc = length(index_ddcc);
 
-    num_sz = 2;
-    ksz_index = zeros(num_sz*Nk,2); 
-    count = 0;
-    for sz = 0:num_sz-1
-        for i = 1:Nk
-            count = count + 1;
-            ksz_index(count,:) = [i,sz];
-        end
+% Make a flattened index for the rho matrix
+num_sz = 2;
+ksz_index = zeros(num_sz*Nk,2);
+count = 0;
+for sz = 0:num_sz-1 % 0 for spin up and 1 for spin down
+    for i = 1:Nk
+        count = count + 1;
+        ksz_index(count,:) = [i,sz];
     end
+end
 
-    dim_rho = length(ksz_index);
+dim_rho = length(ksz_index);
 
-    coords = zeros(6*Nk*dim_rho,2);
-    values = zeros(6*Nk*dim_rho,1);
+coords = zeros(6*Nk*dim_rho,2);
+values = zeros(6*Nk*dim_rho,1);
 
-    count = 0;
+count = 0;
 
-    for i = 1:dim_rho
-        k = ksz_index(i,1);
-        sz = ksz_index(i,2);
+% rho_ij = \sum_k D^{ik}_{jk}/(N-1)
+for i = 1:dim_rho
+    k = ksz_index(i,1);
+    sz = ksz_index(i,2);
 
-        for szt = 0:num_sz-1
-            for Qt = 1:Nk
-                k1t = k;
-                k2t = DkkBZ(Qt,k);
-                k1tp = k;
-                k2tp = DkkBZ(Qt,k);
+    for szt = 0:num_sz-1
+        for Qt = 1:Nk
+            k1t = k;
+            k2t = DkkBZ(Qt,k);
+            k1tp = k;
+            k2tp = DkkBZ(Qt,k);
 
-                    sz1t = sz;
-                    sz2t = szt;
-                    sz1tp = sz;
-                    sz2tp = szt;
+            sz1t = sz;
+            sz2t = szt;
+            sz1tp = sz;
+            sz2tp = szt;
 
-                    if sz==szt
+            if sz==szt % uuuu or dddd
 
-                        if k1t ~= k2t && k1tp ~= k2tp
-                        Sz_ddcc = sz+1;
+                if k1t ~= k2t && k1tp ~= k2tp
+                    Sz_ddcc = sz+1;
 
-                        parity = 1;
-                        parity_p = 1;
+                    parity = 1;
+                    parity_p = 1;
 
-                        if k1t > k2t
-                            k1t = k2t;
-                            parity = -1;
-                        end
-
-                        if k1tp > k2tp
-                            k1tp = k2tp;
-                            parity_p = -1;
-                        end
-
-                        count = count + 1;
-                        coords(count,:) = [i,index_finder_ddcc(k1t,k1tp,Qt,Sz_ddcc)];
-                        values(count) = parity*parity_p/(N-1);
-                        end
-                    else
-                        Sz_ddcc = 3;
-                        parity = 1;
-                        parity_p = 1;
-                        if sz1t == 1
-                            assert(sz2t == 0)
-                            k1t = k2t;
-                            parity = -1;
-                        end
-
-                        if sz1tp == 1
-                            assert(sz2tp == 0)
-                            k1tp = k2tp;
-                            parity_p = -1;
-                        end
-
-                        count = count + 1;
-                        coords(count,:) = [i,index_finder_ddcc(k1t,k1tp,Qt,Sz_ddcc)];
-                        values(count) = parity*parity_p/(N-1);
+                    if k1t > k2t
+                        k1t = k2t;
+                        parity = -1;
                     end
+
+                    if k1tp > k2tp
+                        k1tp = k2tp;
+                        parity_p = -1;
+                    end
+
+                    count = count + 1;
+                    coords(count,:) = [i,index_finder_ddcc(k1t,k1tp,Qt,Sz_ddcc)];
+                    values(count) = parity*parity_p/(N-1);
+                end
+            else % uddu
+                Sz_ddcc = 3;
+                parity = 1;
+                parity_p = 1;
+                if sz1t == 1 % du** which needs to be swapped to -ud**
+                    assert(sz2t == 0)
+                    k1t = k2t;
+                    parity = -1;
+                end
+
+                if sz1tp == 1 % **ud which needs to be swapped to -**du
+                    assert(sz2tp == 0)
+                    k1tp = k2tp;
+                    parity_p = -1;
+                end
+
+                count = count + 1;
+                coords(count,:) = [i,index_finder_ddcc(k1t,k1tp,Qt,Sz_ddcc)];
+                values(count) = parity*parity_p/(N-1);
             end
         end
-
     end
 
-    coords = coords(abs(values)>0,:);
-    values = values(abs(values)>0);
-    rho_k_sz = sparse(coords(:,1),coords(:,2),values,dim_rho,dim_ddcc);
+end
+
+coords = coords(abs(values)>0,:);
+values = values(abs(values)>0);
+rho_k_sz = sparse(coords(:,1),coords(:,2),values,dim_rho,dim_ddcc);
 
 
 end
 
 function M_g2d = G2D(Nk,SkkBZ,DkkBZ)
+% Construct the supermap from the D matrix to the G matrix by fermion
+% permutations. Note that the single particle pieces are handled separately
 [index_d,index_finder_d] = D_indexing(Nk);
 index_g = G_indexing(Nk);
 
 dim_d = length(index_d);
 dim_g = length(index_g);
 
-Sz_G = [0,1,1,0; 1,0,0,1; 0,0,0,0; 1,1,1,1; 0,0,1,1; 1,1,0,0];
+Sz_G = [0,1,1,0; 1,0,0,1; 0,0,0,0; 1,1,1,1; 0,0,1,1; 1,1,0,0]; % 6 different spin 
+% configurations: uddu, duud, uuuu, dddd, uudd, and dduu (u for up and d for down)
 
 coords = zeros(dim_g,2);
 values = zeros(dim_g,1);
@@ -549,9 +574,9 @@ for i = 1:dim_g
     assert(sz1t+sz2t == sz1tp + sz2tp)
     assert(SkkBZ(k2t,k1t) == SkkBZ(k2tp,k1tp))
     Qi_d = SkkBZ(k2t,k1t);
-    if Sz_g == 3 || Sz_g == 4
+    if Sz_g == 3 || Sz_g == 4 % uuuu or dddd for G
         if k2t ~= k1t && k2tp ~= k1tp
-            Sz_d = Sz_g-2;
+            Sz_d = Sz_g-2; % uuuu or dddd for D
 
             parity = 1;
             parity_p = 1;
@@ -571,18 +596,18 @@ for i = 1:dim_g
             values(count) = -parity*parity_p;
         end
 
-    else
-        Sz_d = 3;
+    else % uddu, duud, uudd, and dduu for G
+        Sz_d = 3; % uddu for D
 
         parity = 1;
         parity_p = 1;
-        if sz1t == 1
+        if sz1t == 1 % du** which needs to be swapped to -ud**
             assert(sz2t == 0)
             k1t = k2t;
             parity = -1;
         end
 
-        if sz1tp == 1
+        if sz1tp == 1 % **ud which needs to be swapped to -**du
             assert(sz2tp == 0)
             k1tp = k2tp;
             parity_p = -1;
@@ -602,11 +627,23 @@ M_g2d = sparse(coords(:,1),coords(:,2),values,dim_g,dim_d);
 end
 
 function [M_T2_to_D,M_T2_to_rho,Extra_part_T2] = construct_T2(Nk,SkkBZ,DkkBZ)
+% Construct T2 constraint matrix from the rho, D, and T1 matrices
+% The construction is tedious but straightforward. Similar to the
+% constructions of the DQG conditions, we need to do fermion swaps
 [index_T1,~,index_finder_T1] = T1_index(Nk);
 [index_d,index_finder_d] = D_indexing(Nk);
 [index_rho,index_finder_rho] = rho_index(Nk);
-num_Sz_T2 = 10;
-Q_T2 = (Nk+1)/2;
+
+num_Sz_T2 = 10; % 10 different spin configurations for T2: uudduu, uuuuuu, uuuddu, 
+% udduuu, uddddu, dddddd, ddduud, duuddd, duuuud, and dduudd
+
+Q_T2 = (Nk+1)/2; % We only construct the T2 matrix with total momentum Q_T2 = 0.
+% This is ok for the attractive Hubbard model with uniform pairing
+% condition. 
+% For the Model I' that is beyond the Hubbard, we need to set
+% Q_T2 = 1:Nk.
+
+
 k1_k2_ordered_finder = zeros(Nk,Nk);
 
 count = 0;
@@ -663,8 +700,8 @@ for Sz_T2 = 1:num_Sz_T2
                 k2p_ind = T2_k1_k2(kp,2);
                 k3p_ind = DkkBZ(SkkBZ(k1p_ind,k2p_ind),Qi_T2);
 
-                if Sz_T2 == 1
-                    Sz_T1 = 3;
+                if Sz_T2 == 1 % T2 with uudduu
+                    Sz_T1 = 3; % T1 with uudduu
                     if k2_ind > k1_ind && k2p_ind > k1p_ind
                         Qi_T1 = SkkBZ(k1_ind,SkkBZ(k2_ind,k3p_ind));
                         count_T1 = count_T1 + 1;
@@ -1068,7 +1105,7 @@ end
 
 
 function [index,k1_k2_ordered,index_finder] = T1_index(Nk)
-    num_Sz = 4;
+    num_Sz = 4; % 4 spin configurations for T1: uuuuuu, dddddd, uudduu, and dduudd
     index = zeros(Nk*(Nk*(Nk-1)/2)^2*num_Sz,4);
     index_finder = zeros(Nk*(Nk-1)/2,Nk*(Nk-1)/2,Nk,num_Sz);
     k1_k2_ordered = zeros(Nk*(Nk-1)/2,2);
@@ -1098,6 +1135,7 @@ end
 
 
 function [M_T1_to_D,M_T1_to_rho,Extra_part] = T1_to_D(Nk,SkkBZ,DkkBZ)
+% Construct the suppermap from the D matrix to the T1 matrix
     [index_d,index_finder_d] = D_indexing(Nk);
     [index_rho,index_finder_rho] = rho_index(Nk);
     [index_T1,T1_k1_k2_ordered,~] = T1_index(Nk);
@@ -1130,7 +1168,7 @@ function [M_T1_to_D,M_T1_to_rho,Extra_part] = T1_to_D(Nk,SkkBZ,DkkBZ)
         k2p_ind = T1_k1_k2_ordered(kp,2);
         k3p_ind = DkkBZ(Qi_T1,SkkBZ(k1p_ind,k2p_ind));
 
-        if Sz_T1 == 1
+        if Sz_T1 == 1 % T1 with uuuuuu
             Sz_d = 1;
             sz_rho = 0; 
                 circlic_ind = [k1_ind,k2_ind,k3_ind;k2_ind,k3_ind,k1_ind;k3_ind,k1_ind,k2_ind];
@@ -1198,7 +1236,7 @@ function [M_T1_to_D,M_T1_to_rho,Extra_part] = T1_to_D(Nk,SkkBZ,DkkBZ)
         end
 
 
-        if Sz_T1 == 2
+        if Sz_T1 == 2 % T1 with dddddd
             Sz_d = 2;
             sz_rho = 1;
                 circlic_ind = [k1_ind,k2_ind,k3_ind;k2_ind,k3_ind,k1_ind;k3_ind,k1_ind,k2_ind];
@@ -1264,7 +1302,7 @@ function [M_T1_to_D,M_T1_to_rho,Extra_part] = T1_to_D(Nk,SkkBZ,DkkBZ)
                 end
         end
 
-        if Sz_T1 == 3
+        if Sz_T1 == 3 % T1 with uudduu
             if k3_ind == k3p_ind
                 Sz_d = 1;
                 assert(k1_ind<k2_ind && k1p_ind<k2p_ind)
@@ -1322,7 +1360,7 @@ function [M_T1_to_D,M_T1_to_rho,Extra_part] = T1_to_D(Nk,SkkBZ,DkkBZ)
 
         end
 
-        if Sz_T1 == 4
+        if Sz_T1 == 4 % T1 with dduudd
             if k3_ind == k3p_ind
                 Sz_d = 2;
                 assert(k1_ind<k2_ind && k1p_ind<k2p_ind)
