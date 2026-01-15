@@ -89,7 +89,7 @@ t5 = (1-sqrt(2))/4;
 for i = 1:Nk
     kx = k0(i,1)+A(1);
     ky = k0(i,2)+A(2);
-    B_k_0 = -2*t5*(cos(2*kx)+cos(2*ky));
+    B_k_0 = -2*t5*(cos(2*kx)+cos(2*ky)); % There are typos in the version 3 of the arXiv post which will be updated in later versions
     B_k_x_iy = -t1*(exp(1i*(kx+ky+pi/4))+exp(1i*pi/4)+exp(1i*(kx-pi/4))+exp(1i*(ky-pi/4)));
     B_k_z = -2*t2*(cos(ky)-cos(kx));
 

@@ -1,5 +1,5 @@
 %{
-Copyright (c) 2025 Qiang Gao
+Copyright (c) 2026 Qiang Gao
 Author: Qiang Gao <gq201277@gmail.com>
 Description: Bootstrap the stiffness of a chiral flatband superconductor
 %}
@@ -48,6 +48,8 @@ end
 end
 
 function [nu,stiffness] = gceconvertion(Nx,Ny,N_list,M,s,stiffness_x,stiffness_y)
+% Convert the fixed particle results to the grand canonical ensemble
+% results
 if ~isequal(sort(N_list),(2:2:Nx*Ny))
     error('The list of particle numbers must include all even particle sectors from 2 to Nx*Ny')
 end
@@ -68,11 +70,12 @@ Nk = length(k0_ind);
 omega1 = (b1(1) + 1i*b1(2))/2;
 omega2 = (b2(1) + 1i*b2(2))/2;
 
-k0 = k0 +[-2*pi/Nx,0];
+k0 = k0 +[-2*pi/Nx,0]; % This makes the grid symmetric w.r.t. the gamma
 
 k0_complex = k0(:,1)+1i*k0(:,2);
 
 
+% Constructing the periodical zeta function for the model
 periodic_zeta = zeta_haldane(k0_complex, omega2, omega1);
 
 normalization = sqrt(1 + abs(s*periodic_zeta).^(2*M));
@@ -166,7 +169,7 @@ if norm(A0)<0.00001
     error("The inserted flat gauge field A cannot be too small")
 end
 
-A = A0+[-2*pi/Nx,0];
+A = A0+[-2*pi/Nx,0]; % The extra shift is to make the k-grid symmetric w.r.t. gamma
 omega1 = (b1(1) + 1i*b1(2))/2;
 omega2 = (b2(1) + 1i*b2(2))/2;
 [F_kkp,F_k] = Hamiltonian_chiral_SC(Nk,A,k0,Dkk,M,s,omega1,omega2);
@@ -174,6 +177,7 @@ omega2 = (b2(1) + 1i*b2(2))/2;
 
 ops = sdpsettings('solver','mosek','verbose',0);
 
+% setting up the optimization variables
 M_D = sdpvar(Nk,Nk,Nk,'hermitian','complex');
 rho = sdpvar(Nk,1,'full','real');
 
@@ -191,6 +195,7 @@ for Qi = 1:Nk
 end
 
 
+% DQG and T2 constraints
 for Qi = 1:Nk
     Cons = [Cons, rho(Qi) >= 0, M_D(:,:,Qi)>=0, (M_G(:,:,Qi)+M_G(:,:,Qi)')/2 + diag(rho)>=0,...
         M_Q(:,:,Qi)>=0,M_T(:,:,Qi)+M_T(:,:,Qi)'>=0];
@@ -264,6 +269,7 @@ end
 end
 
 function [M_ex,mask,M_tr,M_T2D,M_T2rho,Extra,Dkk,M_k_Qmk] = con_mat(k0_ind,N)
+% Construct all the constraint matrices
 Nk = length(k0_ind);
 
 [Skk, Dkk, mask, M_k_Qmk] = lattice(k0_ind,Nk);
@@ -336,6 +342,8 @@ end
 end
 
 function M_ex = G2D(Nk,SkkBZ,DkkBZ)
+% Construct the supermap from the D matrix to the G matrix by fermion
+% swaps. There is a single particle piece left which is proportional to rho
     [index_d,index_finder_d] = D_indexing(Nk);
     index_g = G_indexing(Nk);
 
@@ -391,6 +399,8 @@ function M_ex = G2D(Nk,SkkBZ,DkkBZ)
 end
 
 function M_cont = D2rho(Nk,N,DkkBZ)
+%Construct the supermap from the D matrix to the density rho by taking
+%partial trace.
 [index_d,index_finder_d] = D_indexing(Nk);
 dim_d = length(index_d);
 
@@ -439,6 +449,9 @@ M_cont = sparse(coords(:,1),coords(:,2),values,dim_rho,dim_d);
 end
 
 function [M_T2_to_D,M_T2_to_rho,Extra_part_T2] = Con_T2(Nk,SkkBZ,DkkBZ)
+% Construct the T2 matrix from the D, rho matrices. Since the T1 is similar
+% to the T2 matrix and is much easier to construct. We construct the T1
+% matrix first and than map it to the T2.
 [index_d,index_finder_d] = D_indexing(Nk);
 [index_rho,index_finder_rho] = rho_index(Nk);
 [index_T1,T1_k1_k2_ordered,index_finder_T1] = T1_index(Nk);
