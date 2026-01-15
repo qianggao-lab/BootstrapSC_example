@@ -12,7 +12,7 @@ Minimizing the energy (or other figures of merit) over this feasible set yields 
 ## Bootstrapping the superfluid stiffness in flatband superconductors
 In the recent preprint [^gao2025], we showed that for flat-band superconductors, there could be *provable lower bounds* on the zero-temperature superfluid stiffness $D_s$ in frustration-free interacting models via the RDM bootstrap; the bounds scale with interaction strength and band quantum geometry and numerically match variational upper bounds, suggesting the exactness of the results obtained. Later, in a follow-up work [^han2025], we used QMB to certify nonzero $D_s$ extrapolated to the thermodynamic limit and identified two nearly degenerate, particle–hole conjugate pairing channels with distinct Majorana Chern numbers, which, combined with variational approaches, predict two tunable superconducting domes controlled by displacement field and carrier density and tying band geometry to stiffness and topology.
 
-Now, we are going to disclose the two sets of minimal example codes for reproducing part of the essential results presented in those two works. The purpose of this repository is primarily to show how the QMB works, which, however, is not documented. A fully documented version will be released separately.
+Now, we are going to disclose the two sets of minimal example codes for reproducing part of the essential results presented in those two works. The purpose of this repository is primarily to show how the QMB works.
 
 ## Coding Instructions
 ### Prerequisites

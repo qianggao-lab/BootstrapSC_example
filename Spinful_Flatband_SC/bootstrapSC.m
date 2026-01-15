@@ -8,6 +8,7 @@ function [Stiffness_boot,runtime] = bootstrapSC(Nx, Ny, N, A)
 checker(Nx,Ny,N,A)
 format long
 tic
+% We construct an odd by odd lattice centered at the gamma point
 kx0 = -1/2+1/Nx/2:1/Nx:1/2;
 ky0 = -1/2+1/Ny/2:1/Ny:1/2;
 
@@ -18,17 +19,18 @@ A_mat = [a1; a2];
 B_mat = 2*pi*inv(A_mat)';
 
 [KX, KY] = meshgrid(kx0, ky0);
-k0_ind   = [KX(:), KY(:)];
+k0_ind   = [KX(:), KY(:)]; % The indices ensure that k0_ind(Nk+1-i) = -k0_ind(i)
 k0 = k0_ind*B_mat;
 
 Nk = length(k0_ind);
 
 % Building up the D, Q, G, and T2 constraints
-[M_G2D,M_rho,DkkBZ,D2_mask_total,D2_mask,M_k_Qmk,M_T2_to_D_selected,M_T2_to_rho_selected,Extra_part_T2_selected]=build_cons(k0_ind,N);
+[M_G2D,M_rho,DkkBZ,D2_mask_total,~,M_k_Qmk,M_T2_to_D_selected,M_T2_to_rho_selected,Extra_part_T2_selected]=build_cons(k0_ind,N);
 
 % Constructing the flat-band superconducting Hamiltonian
 [F_Q_kkp_ssp_A,F_k_sz_A] = H_TFB(Nk,A,k0,DkkBZ);
 
+% Numbers of spin configurations for different constraint matrices
 num_Sz_T2 = 10;
 num_Sz_D = 3;
 num_Sz_Q = num_Sz_D;
@@ -36,16 +38,11 @@ num_Sz_G = 6;
 num_Sz_dc = 2;
 
 ops = sdpsettings('solver','mosek','verbose',0);
-M_D_s = sdpvar(Nk,Nk,Nk,2,'hermitian','complex');
-M_D_s = D2_mask.*M_D_s;
 
-M_D_s_conj = M_D_s(:,:,:,1);
+% Setting the optimization variables: 2RDM
+M_D = sdpvar(Nk,Nk,Nk,num_Sz_D,'hermitian','complex');
+M_D = D2_mask_total.*M_D;
 
-for Qi = 1:Nk
-    M_D_s_conj(:,:,Qi) = conj(M_D_s(:,:,Qi,1));
-end
-
-M_D = cat(4,M_D_s(:,:,:,1),M_D_s_conj,M_D_s(:,:,:,2));
 rho_k_sz = sdpvar(Nk,num_Sz_dc,'full','real');
 
 Constraints = [rho_k_sz == reshape(M_rho*reshape(M_D,[],1),[],2),sum(sum(rho_k_sz)) == N];
@@ -215,6 +212,9 @@ for i = 1:Nk
 end
 
 U_k_alpha_flat_spin_up = U_k_alpha_flat_pA;
+
+% By time-reversal symmetry, we should have U(k,+A,down) = conj(U(-k,-A,up)).
+% The k-grid is constructed in a way that k(Nk+1-i) = -k(i) = -flip(k) 
 U_k_alpha_flat_spin_down = conj(flip(U_k_alpha_flat_mA,2));
 
 U_k_alpha_flat_spin = cat(3,U_k_alpha_flat_spin_up,U_k_alpha_flat_spin_down);
@@ -409,12 +409,13 @@ for i = 1:Nk
         end
     end
 end
-D2_uuuu_mask = ones(Nk,Nk,Nk);
+
+D2_uuuu_mask = ones(Nk,Nk,Nk); % Mask for <c^d_{k,up}c^d_{Q-k,up}c_{Q-kp,up}c_{kp,up}>
 
 for Qi = 1:Nk
     for k = 1:Nk
         for kp = 1:Nk
-            if Dkk(Qi,k) <= k || Dkk(Qi,kp) <= kp
+            if Dkk(Qi,k) <= k || Dkk(Qi,kp) <= kp % We only keep indices with k<Q-k and kp<Q-kp
                 D2_uuuu_mask(k,kp,Qi) = 0;
             end
         end

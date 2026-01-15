@@ -1,6 +1,8 @@
 function [stiffness_ED,runtime] = ED_gamma(Nx,Ny,N,A)
 checker(Nx,Ny,N,A)
 format long
+
+% We construct an odd by odd lattice centered at the gamma point
 kx0 = -1/2+1/Nx/2:1/Nx:1/2;
 ky0 = -1/2+1/Ny/2:1/Ny:1/2;
 
@@ -137,6 +139,9 @@ for i = 1:Nk
 end
 
 U_k_alpha_flat_spin_up = U_k_alpha_flat_pA;
+
+% By time-reversal symmetry, we should have U(k,+A,down) = conj(U(-k,-A,up)).
+% The k-grid is constructed in a way that k(Nk+1-i) = -k(i)
 U_k_alpha_flat_spin_down = conj(flip(U_k_alpha_flat_mA,2));
 
 U_k_alpha_flat_spin = cat(3,U_k_alpha_flat_spin_up,U_k_alpha_flat_spin_down);
@@ -177,6 +182,27 @@ end
 end
 
 function [H, E0, info] = flatband_ED_gamma(F, Skk, Dkk, N, Nup)
+% ---------------------------------------------------------------
+% Lowest eigenvalue (ground-state energy) in the Γ momentum sector
+% for the flat-band projected interaction Hamiltonian:
+%
+%   H = sum_{k1,k2,k3,k4; s,s'} F(k1,k4,Q,s,s') *
+%           c^\dag_{k1,s} c_{k2,s} c^\dag_{k3,s'} c_{k4,s'},
+%   with Q = k1 - k2 = k4 - k3 (mod BZ).
+%
+% Inputs
+%   F   : [Nk x Nk x Nk x 2 x 2] complex   (F(k1, k4, Q, s, s'))
+%   Skk : [Nk x Nk] int   : index of (k1 + k2) mod BZ
+%   Dkk : [Nk x Nk] int   : index of (k1 - k2) mod BZ
+%   N   : total electrons
+%   Nup : spin up electrons
+%
+% Outputs
+%   H    : constructed many-body Hamiltonian
+%   E0   : ground-state energy at Γ in the chosen spin sector
+%   info : struct with fields
+%          .Nk, .N, .Nup, .Ndown, .nStates, .nnzH, .Gamma, .converged
+% ---------------------------------------------------------------
 Nk = size(Skk,1);
 L  = 2*Nk;
 assert(ndims(F)==5 && all([size(F,1),size(F,2),size(F,3)] == Nk) ...
