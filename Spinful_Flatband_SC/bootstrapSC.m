@@ -37,7 +37,8 @@ num_Sz_Q = num_Sz_D;
 num_Sz_G = 6;
 num_Sz_dc = 2;
 
-ops = sdpsettings('solver','mosek','verbose',0);
+ops = sdpsettings('solver','mosek','verbose',0); % You need to make sure that 
+% you have mosek installed with an active license
 
 % Setting the optimization variables: 2RDM
 M_D = sdpvar(Nk,Nk,Nk,num_Sz_D,'hermitian','complex');
@@ -164,7 +165,7 @@ t5 = (1-sqrt(2))/4;
 for i = 1:Nk
     kx = k0(i,1)+A(1);
     ky = k0(i,2)+A(2);
-    B_k_0 = -2*t5*(cos(2*kx)+cos(2*ky)); % There are typos in the version 3 of the arXiv post which will be updated in later versions
+    B_k_0 = -2*t5*(cos(2*kx)+cos(2*ky));
     B_k_x_iy = -t1*(exp(1i*(kx+ky+pi/4))+exp(1i*pi/4)+exp(1i*(kx-pi/4))+exp(1i*(ky-pi/4)));
     B_k_z = -2*t2*(cos(ky)-cos(kx));
 
@@ -206,9 +207,27 @@ end
 U_k_alpha_flat_pA = reshape(U_k_alpha_pA(:,1,:),[],Nk);
 U_k_alpha_flat_mA = reshape(U_k_alpha_mA(:,1,:),[],Nk);
 
+% for i = 1:Nk
+%     U_k_alpha_flat_pA(:,i) = U_k_alpha_flat_pA(:,i)*conj(U_k_alpha_flat_pA(2,i))/abs(conj(U_k_alpha_flat_pA(2,i)));
+%     U_k_alpha_flat_mA(:,i) = U_k_alpha_flat_mA(:,i)*conj(U_k_alpha_flat_mA(2,i))/abs(conj(U_k_alpha_flat_mA(2,i)));
+% end
+
+tol = 1e-12;
+
 for i = 1:Nk
-    U_k_alpha_flat_pA(:,i) = U_k_alpha_flat_pA(:,i)*conj(U_k_alpha_flat_pA(2,i))/abs(conj(U_k_alpha_flat_pA(2,i)));
-    U_k_alpha_flat_mA(:,i) = U_k_alpha_flat_mA(:,i)*conj(U_k_alpha_flat_mA(2,i))/abs(conj(U_k_alpha_flat_mA(2,i)));
+    z = U_k_alpha_flat_pA(2,i);
+    denom = abs(z);
+    if denom <= tol
+        error('pA: denominator ~ 0 at i=%d (value=%g%+gi)', i, real(z), imag(z));
+    end
+    U_k_alpha_flat_pA(:,i) = U_k_alpha_flat_pA(:,i) * conj(z) / denom;
+
+    z = U_k_alpha_flat_mA(2,i);
+    denom = abs(z);
+    if denom <= tol
+        error('mA: denominator ~ 0 at i=%d (value=%g%+gi)', i, real(z), imag(z));
+    end
+    U_k_alpha_flat_mA(:,i) = U_k_alpha_flat_mA(:,i) * conj(z) / denom;
 end
 
 U_k_alpha_flat_spin_up = U_k_alpha_flat_pA;
