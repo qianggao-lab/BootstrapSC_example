@@ -91,7 +91,6 @@ for Qi = 1:Nk
 end
 
 % Q condition
-M_Q = M_D;
 for Sz = 1:num_Sz_Q
     for Qi = 1:Nk
         Constraints = [Constraints, (M_Q(:,:,Qi,Sz)+M_Q(:,:,Qi,Sz)')/2 >=0];
